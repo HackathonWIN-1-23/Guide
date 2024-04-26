@@ -1,11 +1,19 @@
+import {Button, Container, TextField} from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import axiosApi from "../axiosApi";
 
 const Test: React.FC = () => {
   const [location, setLocation] = useState({ latitude: 0, longitude: 0 });
   const [address, setAddress] = useState('');
+  const [inputAddress, setInputAddress] = useState('');
   const [answer, setAnswer] = useState('')
   const [googleLoaded, setGoogleLoaded] = useState(false);
+
+  // useEffect(() => {
+  //   if (inputAddress) {
+  //     setAddress(inputAddress);
+  //   }
+  // }, [inputAddress]);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -17,12 +25,28 @@ const Test: React.FC = () => {
     document.body.appendChild(script);
   }, []);
 
+  const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputAddress(event.target.value);
+  }
+
+  const handleSubmit = () => {
+    setAddress(inputAddress);
+  }
+
   useEffect(() => {
     if (address) {
       axiosApi.post('/ask', { address, answer: String })
         .then(response => {
           console.log('Server response:', response.data.answer);
           setAnswer(response.data.answer);
+
+          const audio = new Audio(response.data.answer);
+          audio.play();
+
+          // const audioElement = document.getElementById('audioPlayer') as HTMLAudioElement;
+          // if (audioElement) {
+          //   audioElement.play();
+          // }
         })
         .catch(error => {
           console.error('Error sending address:', error);
@@ -61,17 +85,29 @@ const Test: React.FC = () => {
   }
 
   return (
-    <div>
-      <h1>Geolocation and Google Places API Example</h1>
-      <p>Click the button to get your current location and address.</p>
-      <button onClick={getLocation}>Get Location</button>
-      <p>
-        Latitude: {location.latitude}<br />
-        Longitude: {location.longitude}<br />
-        Address: {address}<br/>
-        Answer: {answer}
-      </p>
-    </div>
+    <Container style={{ textAlign: 'center', paddingTop: '20px' }} >
+      <h1>Гид по Кыргызстану</h1>
+      <p>Нажмите на кнопку, чтобы получить информацию о ближайших достопримечательностях</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <TextField
+          variant="outlined"
+          label="Введите адрес"
+          value={inputAddress}
+          onChange={handleAddressChange}
+          style={{ marginRight: '10px' }}
+        />
+        <Button variant="contained" style={{ padding: '10px', fontSize: '16px', cursor: 'pointer' }} onClick={handleSubmit}>Отправить</Button>
+      </div>
+      <Button variant="contained" style={{ padding: '10px', fontSize: '16px', cursor: 'pointer', margin: '10px 0' }} onClick={getLocation}>Узнать информацию</Button>
+      <p style={{ fontSize: '18px' }}>Широта: {location.latitude}</p>
+      <p style={{ fontSize: '18px' }}>Долгота: {location.longitude}</p>
+      <p style={{ fontSize: '18px' }}>Адрес: {address}</p>
+      {/*<p style={{ fontSize: '18px' }}>Ответ: {answer}</p>*/}
+      {/*<audio autoPlay={Boolean(answer)}>*/}
+      {/*  <source src={answer} type="audio/mpeg"/>*/}
+      {/*    Your browser does not support the audio element.*/}
+      {/*</audio>*/}
+    </Container>
   );
 }
 
